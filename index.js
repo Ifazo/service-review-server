@@ -1,39 +1,96 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const express = require('express')
-const cors = require('cors');
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const express = require("express");
+const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
 
-// name: dbService
-// pass: C3hRlFXzFiDR1Zul
-
-
-const uri = "mongodb+srv://dbService:C3hRlFXzFiDR1Zul@cluster0.qyb0v.mongodb.net/?retryWrites=true&w=majority";
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+const uri =
+  "mongodb+srv://ifazo:uSWJqnk5v5kMYDez@cluster0.qyb0v.mongodb.net/?retryWrites=true&w=majority";
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverApi: ServerApiVersion.v1,
+});
 
 async function run() {
   try {
-    const serviceCollection = client.db("test").collection("services");
-    // const service = { name: "Application Security", url:"https://i.ibb.co/0DsssKx/download-2.jpg", price:"$90", description: "Web applications, like anything else directly connected to the Internet, are targets for threat actors. Since 2007, OWASP has tracked the top 10 threats to critical web application security flaws such as injection, broken authentication, misconfiguration, and cross-site scripting to name a few. With application security, the OWASP Top 10 attacks can be stopped. Application security also prevents bot attacks and stops any malicious interaction with applications and APIs. With continuous learning, apps will remain protected even as DevOps releases new content." }
-    app.get('/services', async(req, ))
-    const result = await serviceCollection.insertOne(service);
-    console.log(result);
-  }
-  finally {
+    const serviceCollection = client.db("serviceReview").collection("services");
+    const reviewCollection = client.db("serviceReview").collection("reviews");
 
+    //GET
+    app.get("/services", async (req, res) => {
+      const query = {};
+      const cursor = serviceCollection.find(query);
+      const services = await cursor.toArray();
+      res.send(services);
+    });
+
+    app.get("/services/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: ObjectId(id)};
+      const service = await serviceCollection.findOne(query);
+      res.send(service);
+    });
+
+    app.get("/reviews", async (req, res) => {
+      let query = {};
+      if(req.query.serviceId){
+        query = {serviceId: req.query.serviceId}
+      }
+      const cursor = reviewCollection.find(query);
+      const reviews = await cursor.toArray();
+      res.send(reviews);
+    });
+
+    app.get("/reviews", async (req, res) => {
+      let query = {};
+      if(req.query.email){
+        query = {email: req.query.email}
+      }
+      const cursor = reviewCollection.find(query);
+      const reviews = await cursor.toArray();
+      res.send(reviews);
+    });
+
+
+    // POST
+    app.post("/services", async (req, res) => {
+      const service = req.body;
+      const result = await serviceCollection.insertOne(service);
+      res.send(result);
+    });
+
+    app.post("/reviews", async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollection.insertOne(review);
+      res.send(result);
+    });
+
+    //DELETE
+    app.delete("/reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: ObjectId(id)};
+      const result = await reviewCollection.deleteOne(query);
+      // console.log(result);
+      res.send(result);
+    });
+
+
+
+  } catch(err) {
+    console.log(err);
   }
 }
 
 run().catch(console.dir);
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
+app.get("/", (req, res) => {
+  res.send("Service Review ic running!");
+});
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+  console.log(`Service app listening on port ${port}`);
+});
